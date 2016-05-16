@@ -16,10 +16,12 @@
 import praw
 import re
 import argparse
+from datetime import datetime
 from collections import Counter
 
 USER_AGENT = "Vox Reddi 0.1"
 VOTE_REGEXP = re.compile('\s*\+(\w+)')
+MINIMUM_REGISTERED_TIME_IN_DAYS = 30
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--submission")
@@ -43,6 +45,14 @@ for comment in top_level_comments:
     if match:
         option = match.group(1)
         voter = comment.author
+
+        voter_created_date = datetime.fromtimestamp(voter.created_utc)
+        datediff = datetime.utcnow() - voter_created_date
+        if datediff.days < MINIMUM_REGISTERED_TIME_IN_DAYS:
+            print('Ignoring vote by %s for %s - registered %s days ago' % (
+                (option, voter, datediff.days)))
+            continue
+
         if voter in voters:
             print('Ignoring vote by %s for %s - has already voted' % ((option, voter)))
             continue
