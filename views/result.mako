@@ -1,4 +1,5 @@
 <%inherit file="/base.mako"/>
+<h3>Results</h3>
 <p>
   <ol>
     % for option, number in vote_results:
@@ -7,7 +8,7 @@
   </ol>
 </p>
 
-<h3>Voters</h3>
+<h4>Voters</h4>
 <ul>
 % for voter in voters:
   <li><a href="http://www.reddit.com/user/${voter}">${voter}</a></li>
@@ -15,7 +16,7 @@
 </ul>
 <p><a href='http://redd.it/${post_id}'>Original post</a></p>
 
-<h3>Voting log</h3>
+<h4>Voting log</h4>
 <pre>
   <code>
   % for line in log:

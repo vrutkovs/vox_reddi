@@ -7,15 +7,14 @@
   <link rel="stylesheet" href="/custom.css"></link>
 </head>
 <body>
-  <div class="container">
+  <div class="container wrapper">
     ${self.body()}
+    <div class="push"></div>
   </div>
   <footer class="footer">
-    <div class="container">
-      <p class="text-muted">
-        <a href="https://github.com/vrutkovs/vox_reddi">Source code</a>
-      </p>
-    </div>
+    <p class="text-muted">
+      <a href="https://github.com/vrutkovs/vox_reddi">Source code</a>
+    </p>
   </footer>
 </body>
 </html>
