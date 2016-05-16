@@ -20,7 +20,7 @@ from datetime import datetime
 from collections import Counter
 
 USER_AGENT = "Vox Reddi 0.2"
-VOTE_REGEXP = re.compile('\s*\+(\w+)')
+VOTE_REGEXP = re.compile('\s*\+(\w+)', re.UNICODE)
 MINIMUM_REGISTERED_TIME_IN_DAYS = 30
 
 
@@ -30,7 +30,7 @@ class UnparsableComment(Exception):
         self.author = comment.author
 
     def __repr__(self):
-        return u"Cannot parse comment id %s by %s" % (self.comment_id, self.author)
+        return "Cannot parse comment id %s by %s" % (self.comment_id, self.author)
 
 
 class VoteException(Exception):
@@ -40,7 +40,8 @@ class VoteException(Exception):
         self.message = message
 
     def __repr__(self):
-        return u"Ignoring vote by %s for '%s' - %s" % (self.voter, self.option, self.message)
+        return u"Ignoring vote by {} for '{}' - {}".format(
+            self.voter, self.option, self.message).encode("utf-8")
 
 
 def parse_comment(comment, voters):
@@ -103,4 +104,8 @@ if __name__ == '__main__':
     print('\n----')
     print("Voters:\n%s" % [v.name for v in voters])
     print("Total voted: %s" % len(voters))
-    print("Vote results:\n%s" % vote_results)
+
+    print('\n')
+    results = [u"%s: %s" % (o, c) for o, c in vote_results.items()]
+    for line in results:
+        print(line)
