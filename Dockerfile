@@ -12,4 +12,4 @@ WORKDIR /voxreddi
 
 EXPOSE 8080
 
-CMD ["python3", "vox_reddi_web.py"]
+CMD ["python3", "vox_reddi_web.py", "0.0.0.0:8080"]

@@ -1,5 +1,6 @@
 from os import path
 import traceback
+import sys
 
 from growler import App
 from growler.middleware import Logger, Static
@@ -46,4 +47,10 @@ def hello_world(req, res):
                                             'log': log,
                                             'post_id': post_id}))
 
-app.create_server_and_run_forever(port=8080, host='0.0.0.0')
+
+port = 8080
+host = '0.0.0.0'
+if len(sys.argv) > 1:
+    (host, port) = sys.argv[1].split(':')
+
+app.create_server_and_run_forever(port=port, host=host)
