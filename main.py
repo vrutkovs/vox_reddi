@@ -20,7 +20,7 @@ from datetime import datetime
 from collections import Counter
 
 USER_AGENT = "Vox Reddi 0.2"
-VOTE_REGEXP = re.compile('\s*\+(\w+)', re.UNICODE)
+VOTE_REGEXP = re.compile('^\s*\+(\w+)', re.UNICODE)
 MINIMUM_REGISTERED_TIME_IN_DAYS = 30
 
 
