@@ -81,7 +81,7 @@ def parse_votes_for_post(submission):
             (option, voter) = parse_comment(comment, voters)
             options.append(option)
             voters.append(voter)
-            print("Recorded vote for '%s' by %s" % (option, voter))
+            print("Recorded vote for '%s' by %s, commentid %s" % (option, voter, comment.id))
         except (VoteException, UnparsableComment) as e:
             print(repr(e))
 
