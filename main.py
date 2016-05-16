@@ -91,10 +91,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--submission", required=True)
     args = parser.parse_args()
-    submission_id = args.submission
 
     r = praw.Reddit(user_agent=(USER_AGENT))
-    submission = r.get_submission(submission_id=submission_id)
+    submission = r.get_submission(submission_id=args.submission)
     announcement_date = datetime.fromtimestamp(submission.created_utc)
     td = datetime.utcnow() - announcement_date
     print("%s days %s hours %s minutes since last edit\n" %
