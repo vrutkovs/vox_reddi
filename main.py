@@ -34,17 +34,19 @@ class UnparsableComment(Exception):
 
 
 class VoteException(Exception):
-    def __init__(self, option, voter, message):
+    def __init__(self, option, voter, commentid, message):
         self.option = option
         self.voter = voter
         self.message = message
+        self.commentid = commentid
 
     def __repr__(self):
-        return u"Ignoring vote by {} for '{}' - {}".format(
-            self.voter, self.option, self.message).encode("utf-8")
+        return u"Ignoring vote by {} for '{}' in '{}' - {}".format(
+            self.voter, self.option, self.commentid, self.message).encode("utf-8")
 
 
 def parse_comment(comment, voters):
+    commentid = comment.id
     comment_body = comment.body
     match = re.match(VOTE_REGEXP, comment_body)
 
@@ -54,18 +56,18 @@ def parse_comment(comment, voters):
     option = match.group(1)
     voter = comment.author
     if voter is None:
-        raise VoteException(voter, option, "account was removed")
+        raise VoteException(voter, option, commentid, "account was removed")
 
     voter_created_date = datetime.fromtimestamp(voter.created_utc)
     datediff = datetime.utcnow() - voter_created_date
     if datediff.days < MINIMUM_REGISTERED_TIME_IN_DAYS:
-        raise VoteException(option, voter, "registered %s days ago" % datediff.days)
+        raise VoteException(option, voter, commentid, "registered %s days ago" % datediff.days)
 
     if voter in voters:
-        raise VoteException(option, voter, "has already voted")
+        raise VoteException(option, voter, commentid, "has already voted")
 
     if comment.edited:
-        raise VoteException(option, voter, "comment has been edited")
+        raise VoteException(option, voter, commentid, "comment has been edited")
 
     return (option, voter)
 
