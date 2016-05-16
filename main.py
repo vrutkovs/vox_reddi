@@ -85,7 +85,7 @@ def parse_votes_for_post(submission):
         except (VoteException, UnparsableComment) as e:
             print(repr(e))
 
-    return (voters, Counter(options))
+    return (voters, Counter(options).most_common())
 
 
 if __name__ == '__main__':
@@ -106,6 +106,6 @@ if __name__ == '__main__':
     print("Total voted: %s" % len(voters))
 
     print('\n')
-    results = [u"%s: %s" % (o, c) for o, c in vote_results.items()]
+    results = [u"%s: %s" % (o, c) for o, c in vote_results]
     for line in results:
         print(line)
