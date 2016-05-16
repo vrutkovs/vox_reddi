@@ -50,7 +50,8 @@ for comment in top_level_comments:
         voters.append(voter)
         print("Recorded vote for '%s', by %s" % (option, voter))
     else:
-        print("Cannot parse comment id %s, contents:\n'%s'" % (comment.id, comment_body))
+        stripped_comment = comment_body[:50]
+        print("Cannot parse comment id %s, contents:\n'%s'" % (comment.id, stripped_comment))
 
 vote_results = Counter(options)
 
