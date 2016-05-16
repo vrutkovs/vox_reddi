@@ -15,18 +15,23 @@
 
 import praw
 import re
+import argparse
 from collections import Counter
 
 USER_AGENT = "Vox Reddi 0.1"
 VOTE_REGEXP = re.compile('\s*\+(\w+)')
 
-SUBMISSION = '288zmp'
+parser = argparse.ArgumentParser()
+parser.add_argument("--submission")
+args = parser.parse_args()
+submission = args.submission
+print("Counting votes in %s" % submission)
 
 options = []
 voters = []
 
 r = praw.Reddit(user_agent=(USER_AGENT))
-submission = r.get_submission(submission_id=SUBMISSION)
+submission = r.get_submission(submission_id=submission)
 top_level_comments = submission.comments
 for comment in top_level_comments:
     if comment.edited:
