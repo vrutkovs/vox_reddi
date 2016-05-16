@@ -58,13 +58,13 @@ def parse_comment(comment, voters):
     voter_created_date = datetime.fromtimestamp(voter.created_utc)
     datediff = datetime.utcnow() - voter_created_date
     if datediff.days < MINIMUM_REGISTERED_TIME_IN_DAYS:
-        raise VoteException(voter, option, "registered %s days ago" % datediff.days)
+        raise VoteException(option, voter, "registered %s days ago" % datediff.days)
 
     if voter in voters:
-        raise VoteException(voter, option, "has already voted")
+        raise VoteException(option, voter, "has already voted")
 
     if comment.edited:
-        raise VoteException(voter, option, "comment has been edited")
+        raise VoteException(option, voter, "comment has been edited")
 
     return (option, voter)
 
