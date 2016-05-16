@@ -13,18 +13,18 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import praw
 import re
 import argparse
 import sys
 from datetime import datetime
 from collections import Counter
+from version import version
 
 PY_VERSION = 3
 if sys.version_info[0] < 3:
     PY_VERSION = 2
 
-USER_AGENT = "Vox Reddi 0.2"
+USER_AGENT = "Vox Reddi %s" % version
 VOTE_REGEXP = re.compile('^\s*\+(\w+)', re.UNICODE)
 MINIMUM_REGISTERED_TIME_IN_DAYS = 30
 
@@ -80,22 +80,31 @@ def parse_comment(comment, voters):
     return (option, voter)
 
 
-def parse_votes_for_post(submission):
+def parse_votes_for_post(submission_id):
+    # import praw as late as possible
+    import praw
+
     options = []
     voters = []
+    log = []
 
-    print("Counting votes in %s" % submission.id)
+    r = praw.Reddit(user_agent=(USER_AGENT))
+    submission = r.get_submission(submission_id=submission_id)
+    announcement_date = datetime.fromtimestamp(submission.created_utc)
+    log.append("%s since submission date" % (datetime.utcnow() - announcement_date))
+
+    log.append("Counting votes in %s" % submission.id)
     top_level_comments = submission.comments
     for comment in top_level_comments:
         try:
             (option, voter) = parse_comment(comment, voters)
             options.append(option)
             voters.append(voter)
-            print("Recorded vote for '%s' by %s, commentid %s" % (option, voter, comment.id))
+            log.append("Recorded vote for '%s' by %s, commentid %s" % (option, voter, comment.id))
         except (VoteException, UnparsableComment) as e:
-            print(repr(e))
+            log.append(repr(e))
 
-    return (voters, Counter(options).most_common())
+    return (voters, Counter(options).most_common(), log)
 
 
 if __name__ == '__main__':
@@ -103,16 +112,12 @@ if __name__ == '__main__':
     parser.add_argument("--submission", required=True)
     args = parser.parse_args()
 
-    r = praw.Reddit(user_agent=(USER_AGENT))
-    submission = r.get_submission(submission_id=args.submission)
-    announcement_date = datetime.fromtimestamp(submission.created_utc)
-    print("%s since submission date" % (datetime.utcnow() - announcement_date))
-
-    (voters, vote_results) = parse_votes_for_post(submission)
-    print('\n----')
+    (voters, vote_results, log) = parse_votes_for_post(args.submission)
+    for line in log:
+        print(line)
+    print('----')
     print("Voters:\n%s" % [v.name for v in voters])
     print("Total voted: %s" % len(voters))
-
     print('\n')
     results = [u"%s: %s" % (o, c) for o, c in vote_results]
     for line in results:
