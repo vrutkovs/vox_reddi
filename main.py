@@ -106,9 +106,7 @@ if __name__ == '__main__':
     r = praw.Reddit(user_agent=(USER_AGENT))
     submission = r.get_submission(submission_id=args.submission)
     announcement_date = datetime.fromtimestamp(submission.created_utc)
-    td = datetime.utcnow() - announcement_date
-    print("%s days %s hours %s minutes since last edit\n" %
-          (td.days, td.seconds//3600, (td.seconds//60) % 60))
+    print("%s since submission date" % (datetime.utcnow() - announcement_date))
 
     (voters, vote_results) = parse_votes_for_post(submission)
     print('\n----')
