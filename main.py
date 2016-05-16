@@ -16,8 +16,13 @@
 import praw
 import re
 import argparse
+import sys
 from datetime import datetime
 from collections import Counter
+
+PY_VERSION = 3
+if sys.version_info[0] < 3:
+    PY_VERSION = 2
 
 USER_AGENT = "Vox Reddi 0.2"
 VOTE_REGEXP = re.compile('^\s*\+(\w+)', re.UNICODE)
@@ -30,7 +35,7 @@ class UnparsableComment(Exception):
         self.author = comment.author
 
     def __repr__(self):
-        return "Cannot parse comment id %s by %s" % (self.comment_id, self.author)
+        return u"Cannot parse comment id %s by %s" % (self.comment_id, self.author)
 
 
 class VoteException(Exception):
@@ -41,8 +46,11 @@ class VoteException(Exception):
         self.commentid = commentid
 
     def __repr__(self):
-        return u"Ignoring vote by {} for '{}' in '{}' - {}".format(
-            self.voter, self.option, self.commentid, self.message).encode("utf-8")
+        message = u"Ignoring vote by {} for '{}' in '{}' - {}".format(
+                  self.voter, self.option, self.commentid, self.message)
+        if PY_VERSION == 2:
+            message = message.encode("utf-8")
+        return message
 
 
 def parse_comment(comment, voters):
