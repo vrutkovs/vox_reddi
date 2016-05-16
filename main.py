@@ -89,7 +89,7 @@ def parse_votes_for_post(submission):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--submission")
+    parser.add_argument("--submission", required=True)
     args = parser.parse_args()
     submission_id = args.submission
 
