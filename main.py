@@ -19,51 +19,81 @@ import argparse
 from datetime import datetime
 from collections import Counter
 
-USER_AGENT = "Vox Reddi 0.1"
+USER_AGENT = "Vox Reddi 0.2"
 VOTE_REGEXP = re.compile('\s*\+(\w+)')
 MINIMUM_REGISTERED_TIME_IN_DAYS = 30
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--submission")
-args = parser.parse_args()
-submission = args.submission
-print("Counting votes in %s" % submission)
 
-options = []
-voters = []
+class UnparsableComment(Exception):
+    def __init__(self, comment):
+        self.comment_id = comment.id
+        self.author = comment.author
 
-r = praw.Reddit(user_agent=(USER_AGENT))
-submission = r.get_submission(submission_id=submission)
-top_level_comments = submission.comments
-for comment in top_level_comments:
-    if comment.edited:
-        print("Discarding %s - edited" % comment.id)
-        continue
+    def __repr__(self):
+        return u"Cannot parse comment id %s by %s" % (self.comment_id, self.author)
 
+
+class VoteException(Exception):
+    def __init__(self, option, voter, message):
+        self.option = option
+        self.voter = voter
+        self.message = message
+
+    def __repr__(self):
+        return u"Ignoring vote by %s for '%s' - %s" % (self.voter, self.option, self.message)
+
+
+def parse_comment(comment, voters):
     comment_body = comment.body
     match = re.match(VOTE_REGEXP, comment_body)
-    if match:
-        option = match.group(1)
-        voter = comment.author
 
-        voter_created_date = datetime.fromtimestamp(voter.created_utc)
-        datediff = datetime.utcnow() - voter_created_date
-        if datediff.days < MINIMUM_REGISTERED_TIME_IN_DAYS:
-            print('Ignoring vote by %s for %s - registered %s days ago' % (
-                (option, voter, datediff.days)))
-            continue
+    if not match:
+        raise UnparsableComment(comment)
 
-        if voter in voters:
-            print('Ignoring vote by %s for %s - has already voted' % ((option, voter)))
-            continue
-        options.append(option)
-        voters.append(voter)
-        print("Recorded vote for '%s', by %s" % (option, voter))
-    else:
-        stripped_comment = comment_body[:50]
-        print("Cannot parse comment id %s, contents:\n'%s'" % (comment.id, stripped_comment))
+    option = match.group(1)
+    voter = comment.author
+    if voter is None:
+        raise VoteException(voter, option, 'account was removed')
 
-vote_results = Counter(options)
+    voter_created_date = datetime.fromtimestamp(voter.created_utc)
+    datediff = datetime.utcnow() - voter_created_date
+    if datediff.days < MINIMUM_REGISTERED_TIME_IN_DAYS:
+        raise VoteException(voter, option, 'registered %s days ago' % datediff.days)
 
-print('Voters:\n%s' % voters)
-print('Vote results:\n%s' % vote_results)
+    if voter in voters:
+        raise VoteException(voter, option, 'has already voted')
+
+    if comment.edited:
+        raise VoteException(voter, option, 'comment has been edited')
+
+    return (option, voter)
+
+
+def parse_votes_for_post(submission):
+    options = []
+    voters = []
+
+    r = praw.Reddit(user_agent=(USER_AGENT))
+    submission = r.get_submission(submission_id=submission)
+    top_level_comments = submission.comments
+    for comment in top_level_comments:
+        try:
+            (option, voter) = parse_comment(comment, voters)
+            options.append(option)
+            voters.append(voter)
+            print("Recorded vote for '%s' by %s" % (option, voter))
+        except (VoteException, UnparsableComment) as e:
+            print(repr(e))
+
+    return (voters, Counter(options))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--submission")
+    args = parser.parse_args()
+    submission = args.submission
+    print("Counting votes in %s" % submission)
+    (voters, vote_results) = parse_votes_for_post(submission)
+    print('Voters:\n%s' % voters)
+    print('Vote results:\n%s' % vote_results)
