@@ -73,8 +73,7 @@ def parse_votes_for_post(submission):
     options = []
     voters = []
 
-    r = praw.Reddit(user_agent=(USER_AGENT))
-    submission = r.get_submission(submission_id=submission)
+    print("Counting votes in %s" % submission.id)
     top_level_comments = submission.comments
     for comment in top_level_comments:
         try:
@@ -92,8 +91,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--submission")
     args = parser.parse_args()
-    submission = args.submission
-    print("Counting votes in %s" % submission)
+    submission_id = args.submission
+
+    r = praw.Reddit(user_agent=(USER_AGENT))
+    submission = r.get_submission(submission_id=submission_id)
+    announcement_date = datetime.fromtimestamp(submission.created_utc)
+    td = datetime.utcnow() - announcement_date
+    print("%s days %s hours %s minutes since last edit\n" %
+          (td.days, td.seconds//3600, (td.seconds//60) % 60))
+
     (voters, vote_results) = parse_votes_for_post(submission)
-    print('Voters:\n%s' % voters)
-    print('Vote results:\n%s' % vote_results)
+    print('\n----')
+    print("Voters:\n%s" % [v.name for v in voters])
+    print("Total voted: %s" % len(voters))
+    print("Vote results:\n%s" % vote_results)
