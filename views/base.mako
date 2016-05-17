@@ -3,8 +3,9 @@
 <head>
   <meta charset='utf-8'>
   <title>Vox Reddi</title>
-  <link rel="stylesheet" href="/bootstrap.min.css"></link>
-  <link rel="stylesheet" href="/custom.css"></link>
+  <link rel="stylesheet" href="/static/bootstrap.min.css"></link>
+  <link rel="stylesheet" href="/static/custom.css"></link>
+  <script src="/static/zepto.min.js"></script>
 </head>
 <body>
   <div class="container wrapper">

@@ -2,55 +2,39 @@ from os import path
 import traceback
 import sys
 
-from growler import App
-from growler.middleware import Logger, Static
+import asyncio
+import aiohttp_mako
+from aiohttp import web
 
-# Apparently MakoRenderer is broken
-# from growler_mako.mako_renderer import MakoRenderer
-from mako.template import Template
-from mako.lookup import TemplateLookup
-
-import version
-from vox_reddi_cli import parse_votes_for_post
-
-app = App('VoxReddi')
-app.use(Static(path='public'))
-app.use(Logger())
+from routes import routes, route_handler
 
 
-def render_mako_template(filename, data):
+async def init(loop, host, port):
+    app = web.Application(loop=loop)
+
+    for route in routes:
+        app.router.add_route(route[0], route[1], route[2], name=route[3])
+
+    static_path = path.join(path.dirname(__file__), "public")
+    app.router.add_static('/static/', static_path, name='static')
+
     views_path = path.join(path.dirname(__file__), "views")
-    templ_lookup = TemplateLookup(directories=[views_path])
-    tmpl = Template(filename=path.join(views_path, "%s.mako" % filename), lookup=templ_lookup)
-    return tmpl.render(**data)
+    aiohttp_mako.setup(app, input_encoding='utf-8', output_encoding='utf-8',
+                       default_filters=['decode.utf8'], directories=[views_path])
 
-
-@app.get('/')
-def index(req, res):
-    res.send_html(render_mako_template("home",
-                                       {'version': version.version}))
-
-
-@app.get('/poll')
-def hello_world(req, res):
-    try:
-        post_id = req.param('poll')[0]
-        (voters, vote_results, log) = parse_votes_for_post(post_id)
-    except:
-        exc_lines = traceback.format_exc().splitlines()
-        res.send_html(render_mako_template("error",
-                                           {'lines': exc_lines}))
-    else:
-        res.send_html(render_mako_template("result",
-                                           {'voters': [v.name for v in voters],
-                                            'vote_results': vote_results,
-                                            'log': log,
-                                            'post_id': post_id}))
-
+    handler = app.make_handler()
+    srv = await loop.create_server(handler, host, port)
+    print("Server started at http://{}:{}".format(host, port))
+    return srv, handler
 
 port = 8080
 host = '0.0.0.0'
 if len(sys.argv) > 1:
     (host, port) = sys.argv[1].split(':')
 
-app.create_server_and_run_forever(port=port, host=host)
+loop = asyncio.get_event_loop()
+srv, handler = loop.run_until_complete(init(loop, host, port))
+try:
+    loop.run_forever()
+except KeyboardInterrupt:
+    loop.run_until_complete(handler.finish_connections())
