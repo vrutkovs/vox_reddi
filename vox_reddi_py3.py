@@ -63,7 +63,7 @@ async def parse_comment(comment, voters):
     if not match:
         raise UnparsableComment(comment)
 
-    option = match.group(1)
+    option = match.group(1).title()
     voter = comment.author
     if voter is None:
         raise VoteException(option, voter, commentid, "account was removed")
